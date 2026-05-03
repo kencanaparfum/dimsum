@@ -1,1 +1,113 @@
-hallo dimsum
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Candu Dimsum</title>
+    <style>
+        /* CSS: Mengatur tampilan agar bersih dan penuh */
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .container { display: flex; height: 100vh; }
+        
+        /* Area Menu */
+        .menu-grid {
+            flex: 2; padding: 20px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px; overflow-y: auto; background-color: #fff;
+        }
+        .card {
+            border: 1px solid #ddd; padding: 15px; border-radius: 10px;
+            text-align: center; cursor: pointer; transition: 0.2s;
+        }
+        .card:hover { transform: scale(1.03); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .card h4 { margin: 10px 0 5px; font-size: 14px; }
+        .card p { color: #d32f2f; font-weight: bold; margin: 0; }
+
+        /* Area Keranjang */
+        .cart {
+            flex: 1; padding: 20px; background-color: #f9f9f9;
+            border-left: 2px solid #eee; display: flex; flex-direction: column;
+        }
+        .cart-header { border-bottom: 2px solid #d32f2f; padding-bottom: 10px; margin-bottom: 20px; }
+        #items-list { flex: 1; overflow-y: auto; }
+        .cart-item { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .total-box { font-size: 1.5em; font-weight: bold; margin-top: 20px; padding-top: 10px; border-top: 2px solid #ddd; }
+        .btn-pay {
+            width: 100%; padding: 15px; background: #2e7d32; color: white;
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="menu-grid" id="menu-display">
+        <!-- Data dari Spreadsheet akan muncul di sini -->
+        <p>Sedang mengambil menu dimsum...</p>
+    </div>
+
+    <div class="cart">
+        <div class="cart-header"><h2>Pesanan</h2></div>
+        <div id="items-list"></div>
+        <div class="total-box">Total: Rp <span id="total-val">0</span></div>
+        <button class="btn-pay" onclick="checkout()">Proses Bayar</button>
+    </div>
+</div>
+
+<script>
+    // MASUKKAN URL GOOGLE APPS SCRIPT KAMU DI SINI
+    const SCRIPT_URL = "URL_APPS_SCRIPT_KAMU"; 
+
+    let cart = [];
+    let total = 0;
+
+    async function loadData() {
+        try {
+            const response = await fetch(SCRIPT_URL, { redirect: "follow" });
+            const data = await response.json();
+            renderMenu(data);
+        } catch (error) {
+            console.error("Gagal ambil data:", error);
+            document.getElementById('menu-display').innerHTML = "Gagal memuat menu.";
+        }
+    }
+
+    function renderMenu(items) {
+        const display = document.getElementById('menu-display');
+        display.innerHTML = '';
+        items.forEach(item => {
+            display.innerHTML += `
+                <div class="card" onclick="addToCart('${item.Nama}', ${item.Harga})">
+                    <h4>${item.Nama}</h4>
+                    <p>Rp ${item.Harga.toLocaleString()}</p>
+                </div>`;
+        });
+    }
+
+    function addToCart(nama, harga) {
+        cart.push({nama, harga});
+        total += harga;
+        updateUI();
+    }
+
+    function updateUI() {
+        const list = document.getElementById('items-list');
+        list.innerHTML = cart.map(i => `<div class="cart-item"><span>${i.nama}</span><span>${i.harga.toLocaleString()}</span></div>`).join('');
+        document.getElementById('total-val').innerText = total.toLocaleString();
+    }
+
+    function checkout() {
+        if(cart.length === 0) return alert("Keranjang kosong!");
+        alert("Terima kasih! Total: Rp " + total.toLocaleString());
+        cart = []; total = 0; updateUI();
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>
