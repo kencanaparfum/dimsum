@@ -3,161 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Candu Dimsum - Pro Version</title>
+    <title>POS Candu Dimsum</title>
     <style>
-        /* CSS DASAR */
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-        
-        /* LOGIN SCREEN */
+        /* CSS UNTUK LOGIN SCREEN */
         #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #d32f2f; display: flex; align-items: center; justify-content: center;
-            z-index: 10000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #d32f2f; /* Warna merah dimsum */
+            display: flex; /* Memastikan ini terlihat pertama kali */
+            align-items: center;
+            justify-content: center;
+            z-index: 99999; /* Angka tertinggi agar di depan */
+            font-family: sans-serif;
         }
-        .login-box { background: white; padding: 30px; border-radius: 12px; text-align: center; width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .login-box input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        
-        /* LAYOUT UTAMA */
-        #app-wrapper { display: none; height: 100vh; width: 100vw; flex-direction: row; }
-        .sidebar { width: 70px; background: #222; color: white; display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 25px; }
-        .nav-btn { background: none; border: none; color: white; cursor: pointer; font-size: 0.7rem; opacity: 0.7; transition: 0.3s; }
-        .nav-btn:hover { opacity: 1; }
-        
-        /* HALAMAN POS */
-        .page { flex: 1; display: none; overflow: hidden; }
-        #pos-page { display: flex; }
-        .menu-area { flex: 2; padding: 20px; background: #f0f2f5; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; align-content: start; }
-        .cart-area { flex: 1; background: white; border-left: 2px solid #eee; padding: 20px; display: flex; flex-direction: column; }
-        
-        /* HALAMAN LAPORAN */
-        #report-page { padding: 30px; background: white; overflow-y: auto; display: none; width: 100%; }
-        .report-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px; }
-        .stat-card { padding: 20px; border-radius: 10px; color: white; text-align: center; }
-        
-        /* KOMPONEN UI */
-        .item-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #ddd; text-align: center; cursor: pointer; }
-        .btn-pay { background: #2e7d32; color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; font-size: 1rem; }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* MENYEMBUNYIKAN APLIKASI UTAMA SEBELUM LOGIN */
+        #app-wrapper {
+            display: none; 
+            height: 100vh;
+        }
+
+        input {
+            padding: 10px;
+            width: 100%;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-<!-- SCREEN LOGIN -->
-<div id="login-screen">
-    <div class="login-box">
-        <h2 style="margin:0; color:#d32f2f;">Candu Dimsum</h2>
-        <p style="color:#666;">Masukkan PIN Kasir</p>
-        <input type="password" id="pin-input" placeholder="****" maxlength="4">
-        <button onclick="checkLogin()" class="btn-pay" style="background:#d32f2f;">MASUK</button>
-    </div>
-</div>
-
-<!-- APLIKASI UTAMA -->
-<div id="app-wrapper">
-    <!-- NAVIGASI SAMPING -->
-    <div class="sidebar">
-        <button class="nav-btn" onclick="switchPage('pos')">🛒<br>KASIR</button>
-        <button class="nav-btn" onclick="switchPage('report')">📊<br>LAPORAN</button>
-        <button class="nav-btn" onclick="location.reload()" style="margin-top:auto; margin-bottom:20px;">🚪<br>KELUAR</button>
-    </div>
-
-    <!-- HALAMAN KASIR (POS) -->
-    <div id="pos-page" class="page">
-        <div class="menu-area" id="menu-grid">Memuat menu...</div>
-        <div class="cart-area">
-            <h2 style="border-bottom:2px solid #d32f2f; padding-bottom:10px;">Pesanan</h2>
-            <div id="cart-items" style="flex:1; overflow-y:auto; margin-bottom:15px;"></div>
-            <div style="font-size:1.5rem; font-weight:bold; margin-bottom:15px;">Total: Rp <span id="total-text">0</span></div>
-            <button class="btn-pay" onclick="prosesBayar()">SELESAI & CETAK</button>
+    <!-- SCREEN LOGIN (Akan muncul pertama kali) -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>Candu Dimsum</h2>
+            <p>Masukkan PIN Kasir</p>
+            <input type="password" id="pin-input" placeholder="****">
+            <button onclick="checkLogin()">MASUK</button>
         </div>
     </div>
 
-    <!-- HALAMAN LAPORAN -->
-    <div id="report-page" class="page">
-        <h2>Laporan Penjualan</h2>
-        <div class="report-grid">
-            <div class="stat-card" style="background:#1976d2;">
-                <h3>Harian</h3>
-                <div id="rep-hari" style="font-size:1.5rem;">Rp 0</div>
-            </div>
-            <div class="stat-card" style="background:#388e3c;">
-                <h3>Mingguan</h3>
-                <div id="rep-minggu" style="font-size:1.5rem;">Rp 0</div>
-            </div>
-            <div class="stat-card" style="background:#fbc02d;">
-                <h3>Bulanan</h3>
-                <div id="rep-bulan" style="font-size:1.5rem;">Rp 0</div>
-            </div>
-        </div>
+    <!-- APLIKASI UTAMA (Tersembunyi) -->
+    <div id="app-wrapper">
+        <h2 style="padding: 20px;">Selamat Datang di Kasir</h2>
+        <!-- Kode POS kamu selanjutnya di sini -->
     </div>
-</div>
 
-<script>
-    // URL SCRIPT GOOGLE APPS SCRIPT KAMU
-    const API_URL = "https://script.google.com/macros/s/AKfycbyh2LWETtwceCtyQRRsQap7Bw2ZtIz5b33zavMfnVbHrtdRD2efuMowNVwcZlMcpVcNZQ/exec";
-    const PIN_KASIR = "1234"; // Ganti PIN login di sini
+    <script>
+        // Password sederhana untuk akses
+        const PIN_BENAR = "1234";
 
-    let cart = [];
-    let grandTotal = 0;
-
-    // --- FUNGSI LOGIN ---
-    function checkLogin() {
-        const input = document.getElementById('pin-input').value;
-        if (input === PIN_KASIR) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-wrapper').style.display = 'flex';
-            loadMenu();
-        } else {
-            alert("PIN Salah!");
+        function checkLogin() {
+            const input = document.getElementById('pin-input').value;
+            
+            if (input === PIN_BENAR) {
+                // Sembunyikan login, tampilkan aplikasi
+                document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
+                document.getElementById('app-wrapper').style.display = 'block';
+                console.log("Login Berhasil");
+            } else {
+                alert("PIN Salah! Coba lagi.");
+            }
         }
-    }
-
-    // --- NAVIGASI ---
-    function switchPage(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-        document.getElementById(pageId + '-page').style.display = pageId === 'pos' ? 'flex' : 'block';
-    }
-
-    // --- LOGIKA POS ---
-    async function loadMenu() {
-        try {
-            const res = await fetch(API_URL, { redirect: 'follow' });
-            const data = await res.json();
-            const grid = document.getElementById('menu-grid');
-            grid.innerHTML = data.map(item => `
-                <div class="item-card" onclick="tambahItem('${item.Nama}', ${item.Harga})">
-                    <strong>${item.Nama}</strong><br>
-                    <span style="color:#d32f2f;">Rp ${Number(item.Harga).toLocaleString('id-ID')}</span>
-                </div>
-            `).join('');
-        } catch (e) {
-            console.error("Gagal muat menu:", e);
-        }
-    }
-
-    function tambahItem(nama, harga) {
-        cart.push({ nama, harga });
-        grandTotal += Number(harga);
-        updateCartUI();
-    }
-
-    function updateCartUI() {
-        const list = document.getElementById('cart-items');
-        list.innerHTML = cart.map(i => `
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px; border-bottom:1px solid #eee;">
-                <span>${i.nama}</span>
-                <span>${i.harga.toLocaleString('id-ID')}</span>
-            </div>
-        `).join('');
-        document.getElementById('total-text').innerText = grandTotal.toLocaleString('id-ID');
-    }
-
-    function prosesBayar() {
-        if (cart.length === 0) return alert("Belum ada pesanan!");
-        alert("Transaksi Berhasil! Total: Rp " + grandTotal.toLocaleString('id-ID'));
-        // Reset POS
-        cart = []; grandTotal = 0; updateCartUI();
-    }
-</script>
-
+    </script>
 </body>
 </html>
