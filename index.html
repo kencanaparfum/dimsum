@@ -59,54 +59,81 @@
 </div>
 
 <script>
-    // MASUKKAN URL GOOGLE APPS SCRIPT KAMU DI SINI
+    // 1. MASUKKAN URL GOOGLE APPS SCRIPT KAMU DI SINI
+    // Pastikan URL diakhiri dengan /exec
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyh2LWETtwceCtyQRRsQap7Bw2ZtIz5b33zavMfnVbHrtdRD2efuMowNVwcZlMcpVcNZQ/exec"; 
 
     let cart = [];
     let total = 0;
 
     async function loadData() {
+        const display = document.getElementById('menu-display');
         try {
-            const response = await fetch(SCRIPT_URL, { redirect: "follow" });
+            // Menambahkan 'redirect: follow' sangat penting untuk Google Apps Script
+            const response = await fetch(SCRIPT_URL, { 
+                method: 'GET',
+                redirect: 'follow' 
+            });
+
+            if (!response.ok) {
+                throw new Error("Respon jaringan tidak ok");
+            }
+
             const data = await response.json();
+            console.log("Data berhasil dimuat:", data); // Cek di console browser (F12)
             renderMenu(data);
         } catch (error) {
             console.error("Gagal ambil data:", error);
-            document.getElementById('menu-display').innerHTML = "Gagal memuat menu.";
+            display.innerHTML = `<p style="color:red;">Gagal memuat menu: ${error.message}. <br>Pastikan URL Apps Script sudah benar dan dipublish untuk 'Anyone'.</p>`;
         }
     }
 
     function renderMenu(items) {
         const display = document.getElementById('menu-display');
         display.innerHTML = '';
+        
+        if (items.length === 0) {
+            display.innerHTML = "<p>Menu kosong di Spreadsheet.</p>";
+            return;
+        }
+
         items.forEach(item => {
+            // Pastikan Nama dan Harga sesuai dengan header di Spreadsheet kamu
+            const namaItem = item.Nama || "Tanpa Nama";
+            const hargaItem = item.Harga || 0;
+
             display.innerHTML += `
-                <div class="card" onclick="addToCart('${item.Nama}', ${item.Harga})">
-                    <h4>${item.Nama}</h4>
-                    <p>Rp ${item.Harga.toLocaleString()}</p>
+                <div class="card" onclick="addToCart('${namaItem}', ${hargaItem})">
+                    <h4>${namaItem}</h4>
+                    <p>Rp ${Number(hargaItem).toLocaleString()}</p>
                 </div>`;
         });
     }
 
     function addToCart(nama, harga) {
         cart.push({nama, harga});
-        total += harga;
+        total += Number(harga);
         updateUI();
     }
 
     function updateUI() {
         const list = document.getElementById('items-list');
-        list.innerHTML = cart.map(i => `<div class="cart-item"><span>${i.nama}</span><span>${i.harga.toLocaleString()}</span></div>`).join('');
+        list.innerHTML = cart.map(i => `
+            <div class="cart-item">
+                <span>${i.nama}</span>
+                <span>${i.harga.toLocaleString()}</span>
+            </div>`).join('');
         document.getElementById('total-val').innerText = total.toLocaleString();
     }
 
     function checkout() {
-        if(cart.length === 0) return alert("Keranjang kosong!");
-        alert("Terima kasih! Total: Rp " + total.toLocaleString());
+        if(cart.length === 0) return alert("Keranjang masih kosong!");
+        alert("Pesanan diterima! Total: Rp " + total.toLocaleString());
         cart = []; total = 0; updateUI();
     }
 
-    loadData();
+    // Jalankan fungsi saat halaman siap
+    window.onload = loadData;
 </script>
 
 </body>
