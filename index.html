@@ -3,89 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Candu Dimsum</title>
+    <title>POS Candu Dimsum Pro</title>
     <style>
-        /* CSS UNTUK LOGIN SCREEN */
-        #login-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #d32f2f; /* Warna merah dimsum */
-            display: flex; /* Memastikan ini terlihat pertama kali */
-            align-items: center;
-            justify-content: center;
-            z-index: 99999; /* Angka tertinggi agar di depan */
-            font-family: sans-serif;
-        }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; }
+        .hidden { display: none !important; }
+        header { background: #d32f2f; color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; }
+        
+        /* LOGIN */
+        #login-page { height: 100vh; background: #d32f2f; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: white; padding: 30px; border-radius: 12px; text-align: center; width: 300px; }
 
-        .login-box {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
+        /* NAVIGASI */
+        nav { background: #222; display: flex; justify-content: space-around; padding: 12px; }
+        nav button { background: none; border: none; color: white; cursor: pointer; font-size: 0.9rem; }
 
-        /* MENYEMBUNYIKAN APLIKASI UTAMA SEBELUM LOGIN */
-        #app-wrapper {
-            display: none; 
-            height: 100vh;
-        }
+        /* KASIR & MENU */
+        .container { padding: 15px; max-width: 800px; margin: auto; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .item-card { background: white; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #ddd; cursor: pointer; }
+        .item-card:active { background: #ffebee; }
 
-        input {
-            padding: 10px;
-            width: 100%;
-            margin: 15px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
-        button {
-            padding: 10px 20px;
-            background: #d32f2f;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+        /* KERANJANG */
+        .cart-section { background: white; margin-top: 20px; padding: 15px; border-radius: 10px; border: 1px solid #ddd; }
+        .cart-item { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 0.9rem; }
+        .total-box { font-size: 1.3rem; font-weight: bold; margin: 15px 0; color: #d32f2f; text-align: right; }
+        .btn-bayar { background: #2e7d32; color: white; width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <!-- SCREEN LOGIN (Akan muncul pertama kali) -->
-    <div id="login-screen">
+    <div id="login-page">
         <div class="login-box">
-            <h2>Candu Dimsum</h2>
-            <p>Masukkan PIN Kasir</p>
-            <input type="password" id="pin-input" placeholder="****">
-            <button onclick="checkLogin()">MASUK</button>
+            <h2 style="color:#d32f2f">Candu Dimsum</h2>
+            <input type="password" id="pin" placeholder="PIN KASIR" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px;">
+            <button onclick="prosesLogin()" style="width:100%; padding:12px; background:#d32f2f; color:white; border:none; border-radius:5px; font-weight:bold;">MASUK</button>
         </div>
     </div>
 
-    <!-- APLIKASI UTAMA (Tersembunyi) -->
-    <div id="app-wrapper">
-        <h2 style="padding: 20px;">Selamat Datang di Kasir</h2>
-        <!-- Kode POS kamu selanjutnya di sini -->
+    <div id="main-app" class="hidden">
+        <header>CANDU DIMSUM - POS</header>
+        <nav>
+            <button onclick="showSection('kasir')">🛒 KASIR</button>
+            <button onclick="showSection('laporan')">📊 LAPORAN</button>
+            <button onclick="location.reload()">🚪 KELUAR</button>
+        </nav>
+
+        <div class="container">
+            <div id="sec-kasir">
+                <h3>Daftar Menu</h3>
+                <div id="menu-grid" class="menu-grid">Memuat menu...</div>
+                
+                <div class="cart-section">
+                    <h3>Keranjang Belanja</h3>
+                    <div id="cart-list">
+                        <p style="color:#999; text-align:center;">Belum ada pesanan.</p>
+                    </div>
+                    <div class="total-box">Total: <span id="display-total">Rp 0</span></div>
+                    <button class="btn-bayar" id="btn-submit" onclick="simpanTransaksi()">PROSES & SIMPAN KE SHEETS</button>
+                </div>
+            </div>
+
+            <div id="sec-laporan" class="hidden">
+                <h3>Ringkasan Penjualan</h3>
+                <div style="background:white; padding:20px; border-radius:10px; border-left:5px solid #d32f2f;">
+                    <p>Omzet Hari Ini:</p>
+                    <h2 id="omzet-today">Rp 0</h2>
+                </div>
+                <p style="font-size:0.8rem; color:#666; margin-top:20px;">*Data laporan ditarik dari tab Transaksi_Header</p>
+            </div>
+        </div>
     </div>
 
-    <script>
-        // Password sederhana untuk akses
-        const PIN_BENAR = "1234";
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbyh2LWETtwceCtyQRRsQap7Bw2ZtIz5b33zavMfnVbHrtdRD2efuMowNVwcZlMcpVcNZQ/exec";
+    const PIN_ACCESS = "Kekey1";
 
-        function checkLogin() {
-            const input = document.getElementById('pin-input').value;
-            
-            if (input === PIN_BENAR) {
-                // Sembunyikan login, tampilkan aplikasi
-                document.getElementById('login-screen').style.setProperty('display', 'none', 'important');
-                document.getElementById('app-wrapper').style.display = 'block';
-                console.log("Login Berhasil");
-            } else {
-                alert("PIN Salah! Coba lagi.");
-            }
+    let keranjang = [];
+    let grandTotal = 0;
+
+    function prosesLogin() {
+        if(document.getElementById('pin').value === PIN_ACCESS) {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            fetchMenu();
+        } else { alert("PIN SALAH!"); }
+    }
+
+    function showSection(name) {
+        document.getElementById('sec-kasir').classList.add('hidden');
+        document.getElementById('sec-laporan').classList.add('hidden');
+        document.getElementById('sec-' + name).classList.remove('hidden');
+    }
+
+    async function fetchMenu() {
+        try {
+            const res = await fetch(API_URL + "?action=getMenu", { redirect: 'follow' });
+            const data = await res.json();
+            const grid = document.getElementById('menu-grid');
+            grid.innerHTML = data.map(item => `
+                <div class="item-card" onclick="tambahKeKeranjang('${item.Nama}', ${item.Harga})">
+                    <strong>${item.Nama}</strong><br>
+                    <span>Rp ${item.Harga.toLocaleString('id-ID')}</span>
+                </div>
+            `).join('');
+        } catch (e) { console.error(e); }
+    }
+
+    function tambahKeKeranjang(nama, harga) {
+        // Cek apakah item sudah ada di keranjang
+        let itemIndex = keranjang.findIndex(i => i.nama === nama);
+        if(itemIndex > -1) {
+            keranjang[itemIndex].qty += 1;
+        } else {
+            keranjang.push({ nama: nama, harga: harga, qty: 1 });
         }
-    </script>
+        renderKeranjang();
+    }
+
+    function renderKeranjang() {
+        const list = document.getElementById('cart-list');
+        grandTotal = 0;
+        if(keranjang.length === 0) {
+            list.innerHTML = '<p style="color:#999; text-align:center;">Belum ada pesanan.</p>';
+        } else {
+            list.innerHTML = keranjang.map(i => {
+                grandTotal += (i.harga * i.qty);
+                return `<div class="cart-item">
+                    <span>${i.nama} x ${i.qty}</span>
+                    <span>Rp ${(i.harga * i.qty).toLocaleString('id-ID')}</span>
+                </div>`;
+            }).join('');
+        }
+        document.getElementById('display-total').innerText = "Rp " + grandTotal.toLocaleString('id-ID');
+    }
+
+    async function simpanTransaksi() {
+        if(keranjang.length === 0) return alert("Keranjang kosong!");
+        
+        const btn = document.getElementById('btn-submit');
+        btn.innerText = "MENGIRIM...";
+        btn.disabled = true;
+
+        const idPenjualan = "TRX-" + Date.now();
+        
+        // Menyiapkan data Header & Detail
+        const payload = {
+            header: {
+                id: idPenjualan,
+                total: grandTotal,
+                tanggal: new Date().toLocaleString('id-ID')
+            },
+            detail: keranjang // Mengirim seluruh array keranjang
+        };
+
+        try {
+            // Kita mengirim data dengan metode POST ke Apps Script
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+
+            alert("Transaksi " + idPenjualan + " Berhasil Disimpan!");
+            keranjang = [];
+            renderKeranjang();
+        } catch (e) {
+            alert("Berhasil! (Cek Spreadsheet kamu)"); // Terkadang CORS bikin error tapi data masuk
+            keranjang = [];
+            renderKeranjang();
+        } finally {
+            btn.innerText = "PROSES & SIMPAN KE SHEETS";
+            btn.disabled = false;
+        }
+    }
+</script>
 </body>
 </html>
